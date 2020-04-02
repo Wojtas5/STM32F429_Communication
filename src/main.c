@@ -20,14 +20,10 @@ int main(void)
 	while(1)
 	{
 		BSP_LedGreenOn();
-		BSP_LedBlueOn();
-		BSP_LedRedOn();
 
 		BSP_Delay_ms(500);
 
 		BSP_LedGreenOff();
-		BSP_LedBlueOff();
-		BSP_LedRedOff();
 
 		BSP_Delay_ms(100);
 	}
