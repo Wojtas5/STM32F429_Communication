@@ -7,7 +7,6 @@
 
 #include "stm32f4xx.h"
 #include "Ethernet.h"
-#include "IP.h"
 #include "bsp.h"
 #include "misc.h"
 
