@@ -12,7 +12,9 @@
 #include "bsp.h"
 #include "Ethernet.h"
 #include "IP.h"
+#include "misc.h"
 
+/* Global variables */
 uint8_t DestAddr[6] = {0x50, 0x9A, 0x4C, 0x36, 0x00, 0x45}; // MAC address of PC
 uint8_t SrcAddr[6] =  {0x02, 0x00, 0x00, 0x00, 0x00, 0x00}; // MAC address of a microcontroller
 
@@ -26,6 +28,7 @@ uint8_t data[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0x
 				  0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF,
 				  0xDE, 0xAD, 0xBE, 0xEF};
 
+/* Global structures */
 struct ETH_Header ethhdr;
 struct IP_Header iphdr;
 
@@ -57,7 +60,7 @@ int main(void)
 	IP_StructInit(&iphdr, SrcIP, DestIP, sizeof(data));
 
 	/* Copy headers and data to be sent to transmit buffer and prepare them for sending */
-	IP_Send(&iphdr, &ethhdr, data, sizeof(data));
+	IP_Send(&iphdr, &ethhdr, data);
 
 	/* Resend the data every 500 miliseconds */
 	while(1)

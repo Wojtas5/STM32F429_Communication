@@ -185,11 +185,6 @@ struct ETH_Header {
 #define TX_DESCRIPTORS 3U
 #define RX_DESCRIPTORS 3U
 
-extern ETH_TxDescriptor DMATxDesc[TX_DESCRIPTORS];
-extern ETH_RxDescriptor DMARxDesc[RX_DESCRIPTORS];
-extern uint8_t Txbuff[TX_DESCRIPTORS*2][TX_BUF_SIZE];
-extern uint8_t Rxbuff[RX_DESCRIPTORS*2][RX_BUF_SIZE];
-
 /* ETH_TxDescriptor */
 #define TX_DESC_OWN 						((uint32_t)(1U << 31))
 #define TX_DESC_INT_ON_COMPLETION_ENABLED 	((uint32_t)(1U << 30))
@@ -410,5 +405,13 @@ void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc);
 
 /* Other */
 void SYSCFG_SelectRMII(void);
+
+extern ETH_TxDescriptor DMATxDesc[TX_DESCRIPTORS];
+extern ETH_RxDescriptor DMARxDesc[RX_DESCRIPTORS];
+extern uint8_t Txbuff[TX_DESCRIPTORS*2][TX_BUF_SIZE];
+extern uint8_t Rxbuff[RX_DESCRIPTORS*2][RX_BUF_SIZE];
+
+extern ETH_MACInit MACInit;
+extern ETH_DMAInit DMAInit;
 
 #endif /* ETHERNET_H_ */

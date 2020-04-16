@@ -6,8 +6,8 @@
  */
 
 #include "IP.h"
-#include "Ethernet.h"
 #include "string.h"
+#include "misc.h"
 
 /* Initialize IP_Header structure with default values and calculate total length and Checksum */
 void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uint16_t len)
@@ -45,8 +45,8 @@ uint16_t IP_CalculateChecksum(struct IP_Header *iphdr)
 	return (uint16_t)~sum;
 }
 
-/* Copy IP and Etheren headers as well as data to transmit buffer */
-void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data, uint16_t datasize)
+/* Copy IP and Ethernet headers as well as data to transmit buffer */
+void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data)
 {
 	memcpy((uint8_t *)DMATxDesc->Buf1Addr, (uint8_t *)ethhdr, sizeof(struct ETH_Header));
 	memcpy((uint8_t *)(DMATxDesc->Buf1Addr + sizeof(struct ETH_Header)), (uint8_t *)iphdr, sizeof(struct IP_Header));
@@ -56,16 +56,4 @@ void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data, 
 	ETH_DMAPrepareTxDesc(DMATxDesc, sizeof(struct ETH_Header) + swap_uint16(iphdr->TotalLength));
 }
 
-
-uint16_t swap_uint16(uint16_t val)
-{
-    return (val << 8) | (val >> 8 );
-}
-
-
-uint32_t swap_uint32(uint32_t val)
-{
-    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF );
-    return (val << 16) | (val >> 16);
-}
 

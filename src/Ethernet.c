@@ -9,6 +9,7 @@
 #include "Ethernet.h"
 #include "IP.h"
 #include "bsp.h"
+#include "misc.h"
 
 /* Macros */
 #define DISABLED ((uint32_t)0U)
@@ -589,6 +590,7 @@ void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength)
 	{
 	    /* Clear Transmit buffer unavailable flag */
 	    ETH->DMASR = TRANSMIT_BUFFER_UNAVAILABLE;
+
 	    /* Resume DMA transmission*/
 	    ETH->DMATPDR = 0;
 	}

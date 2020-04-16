@@ -50,7 +50,6 @@ struct IP_Header {
 #define TCP_PROTOCOL          6U
 #define UDP_PROTOCOL          17U
 
-
 #define IPV4_ADDR(ipaddr) ((uint32_t)ipaddr[0] << 24 | \
 						   (uint32_t)ipaddr[1] << 16 | \
 						   (uint32_t)ipaddr[2] << 8 |  \
@@ -62,8 +61,6 @@ struct IP_Header {
 /* ===================== */
 void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uint16_t len);
 uint16_t IP_CalculateChecksum(struct IP_Header *iphdr);
-void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data, uint16_t datasize);
+void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data);
 
-uint16_t swap_uint16(uint16_t val);
-uint32_t swap_uint32(uint32_t val);
 #endif /* IP_H_ */
