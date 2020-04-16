@@ -70,6 +70,9 @@ void BSP_LedRedToggle(void)
 	GPIOB->ODR ^= LED_RED;
 }
 
+/* ============================================= */
+/*  Functions to be moved to a different module  */
+/* ============================================= */
 
 void EXTI15_10_IRQHandler(void)
 {
@@ -80,5 +83,11 @@ void EXTI15_10_IRQHandler(void)
 		EXTI->PR |= USER_BUTTON;  // Clear interrupt flag
 	}
 }
+
+void RCC_SYSCFGEnable(void)
+{
+	RCC->APB2ENR |= SYSCFG_ENABLE;
+}
+
 
 
