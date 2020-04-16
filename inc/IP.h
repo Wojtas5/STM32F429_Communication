@@ -59,6 +59,7 @@ struct IP_Header {
 /* ===================== */
 /*  Function prototypes  */
 /* ===================== */
+
 void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uint16_t len);
 uint16_t IP_CalculateChecksum(struct IP_Header *iphdr);
 void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data);
