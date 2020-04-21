@@ -546,7 +546,7 @@ void ETH_DMATxDescInit(ETH_TxDescriptor *DMATxDesc)
 	/* I will be sending one simple message so I initialize this descriptor as
 	 * first and last segment and in ring configuration
 	 */
-	tempreg = (TX_DESC_INT_ON_COMPLETION_ENABLED |
+	tempreg = (TX_DESC_INT_ON_COMPLETION_DISABLED |
 			   TX_DESC_LAST_SEGMENT |
 			   TX_DESC_FIRST_SEGMENT |
 			   TX_DESC_ENABLE_CRC |
@@ -585,7 +585,7 @@ void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength)
 	DMATxDesc->ControlAndStatus |= TX_DESC_OWN;
 
 	/* Check for Transmit buffer unavailable flag, clear if set */
-	if ((ETH->DMASR & TRANSMIT_BUFFER_UNAVAILABLE) != 0)
+	if((ETH->DMASR & TRANSMIT_BUFFER_UNAVAILABLE) != 0)
 	{
 	    /* Clear Transmit buffer unavailable flag */
 	    ETH->DMASR = TRANSMIT_BUFFER_UNAVAILABLE;
@@ -601,9 +601,7 @@ void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc)
 	uint32_t tempreg = 0U;
 
 	/* Status */
-	tempreg = (RX_DESC_FIRST_DESCRIPTOR |
-			   RX_DESC_LAST_DESCRIPTOR |
-			   RX_DESC_OWN);
+	tempreg = (RX_DESC_FIRST_DESCRIPTOR | RX_DESC_LAST_DESCRIPTOR | RX_DESC_OWN);
 
 	DMARxDesc->Status |= tempreg;
 
@@ -620,6 +618,24 @@ void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc)
 	DMARxDesc->Buf2NextDescAddr = (uint32_t)&Rxbuff[1];
 
 	ETH->DMARDLAR = (uint32_t)DMARxDesc;
+}
+
+
+__attribute__ ((weak)) void ETH_RxCallback(void)
+{
+}
+
+
+void ETH_IRQHandler(void)
+{
+	if ((ETH->DMASR & RECEIVE_FINISHED) == RECEIVE_FINISHED)
+	{
+		ETH_RxCallback();
+		/* Clear receive pending interrupt bit */
+		ETH->DMASR |= RECEIVE_FINISHED;
+	}
+	/* Clear normal interrupt summary bit */
+	ETH->DMASR |= NORMAL_INTERRUPT_SUMMARY;
 }
 
 
