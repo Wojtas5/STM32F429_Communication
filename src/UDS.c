@@ -17,15 +17,30 @@ extern struct IP_Header iphdr;
 
 void UDS_Respond(uint8_t *msg)
 {
-	if(msg[0] == UDS_TESTER_PRESENT_RQ_SID && msg[1] == UDS_END_OF_REQUEST) // End of meesage 0x00
+	uint8_t *response;
+
+	if(UDS_TESTER_PRESENT_RQ_SID == msg[0])
 	{
-		udspos.PositiveSID = UDS_TESTER_PRESENT_RP_SID;
-		udspos.RequestedSID = UDS_TESTER_PRESENT_RQ_SID;
+		if(UDS_END_OF_REQUEST == msg[1])
+		{
+			udspos.PositiveSID = UDS_TESTER_PRESENT_RP_SID;
+			udspos.RequestedSID = UDS_TESTER_PRESENT_RQ_SID;
 
-		iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_Pos));
-		iphdr.Checksum = IP_CalculateChecksum(&iphdr);
+			iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_Pos));
 
-		IP_Send(&iphdr, &ethhdr, (uint8_t *)&udspos);
+			response = (uint8_t *)&udspos;
+		}
+
+		else
+		{
+			udsneg.NegativeSID = UDS_COMMAND_NOT_SUPPORTED;
+			udsneg.RequestedSID = msg[0];
+			udsneg.ResponseCode = UDS_INCORRECT_MSG_LEN_OR_INV_FORMAT;
+
+			iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_Neg));
+
+			response = (uint8_t *)&udsneg;
+		}
 	}
 
 	else
@@ -35,8 +50,11 @@ void UDS_Respond(uint8_t *msg)
 		udsneg.ResponseCode = UDS_SERVICE_NOT_SUPPORTED;
 
 		iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_Neg));
-		iphdr.Checksum = IP_CalculateChecksum(&iphdr);
 
-		IP_Send(&iphdr, &ethhdr, (uint8_t *)&udsneg);
+		response = (uint8_t *)&udsneg;
 	}
+
+	iphdr.Checksum = IP_CalculateChecksum(&iphdr);
+
+	IP_Send(&iphdr, &ethhdr, response);
 }

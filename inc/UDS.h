@@ -26,11 +26,12 @@ struct UDS_Pos {
 
 } __attribute__ ((packed));;
 
-#define UDS_TESTER_PRESENT_RQ_SID ((uint8_t)0x3EU)
-#define UDS_TESTER_PRESENT_RP_SID ((uint8_t)0x7EU)
-#define UDS_COMMAND_NOT_SUPPORTED ((uint8_t)0x7FU)
-#define UDS_SERVICE_NOT_SUPPORTED ((uint8_t)0x11U)
-#define UDS_END_OF_REQUEST        ((uint8_t)0x00U)
+#define UDS_TESTER_PRESENT_RQ_SID 			((uint8_t)0x3EU)
+#define UDS_TESTER_PRESENT_RP_SID 			((uint8_t)0x7EU)
+#define UDS_COMMAND_NOT_SUPPORTED 			((uint8_t)0x7FU)
+#define UDS_INCORRECT_MSG_LEN_OR_INV_FORMAT ((uint8_t)0x13U)
+#define UDS_SERVICE_NOT_SUPPORTED 			((uint8_t)0x11U)
+#define UDS_END_OF_REQUEST        			((uint8_t)0x00U)
 
 /* ===================== */
 /*  Function prototypes  */

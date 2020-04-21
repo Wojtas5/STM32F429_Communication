@@ -11,10 +11,10 @@
 #include "stdint.h"
 
 typedef enum {
-	MAC0,
-	MAC1,
-	MAC2,
-	MAC3
+	MAC0 = 0x00U,
+	MAC1 = 0x08U,
+	MAC2 = 0x10U,
+	MAC3 = 0x18U
 } ETH_MACAddr;
 
 
@@ -299,10 +299,10 @@ struct ETH_Header {
 #define VLAN_TAG_12BIT ((uint32_t)(1U << 16))
 
 /* MACA0HR - MACA3LR */
-#define MAC_ADDR0HR_MO   ((uint32_t)(1U << 31))
-#define MAC_ADDR1_ENABLE ((uint32_t)(1U << 31))
-#define MAC_ADDR2_ENABLE ((uint32_t)(1U << 31))
-#define MAC_ADDR3_ENABLE ((uint32_t)(1U << 31))
+#define MAC_ADDR_ENABLE ((uint32_t)(1U << 31))
+#define MAC_BASE        ((uint32_t)0x40028000)
+#define MAC_ADDR_HBASE  ((uint32_t)MAC_BASE + (uint32_t)0x40U)
+#define MAC_ADDR_LBASE  ((uint32_t)MAC_BASE + (uint32_t)0x44U)
 
 /* ============================== */
 /*  DMA registers related macros  */
