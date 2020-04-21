@@ -25,7 +25,7 @@ TesterPresentSID = b'\x3E'
 
 # Other SIDs
 DiagnosticSessionControlSID = b'\x10'
-RandomSID = b'\xFF'
+TesterPresentInvalidSID = b'\x3E\xFF\xFF'
 
 # Name of network interface card
 eth = 'Realtek PCIe GBE Family Controller'
@@ -33,7 +33,7 @@ eth = 'Realtek PCIe GBE Family Controller'
 # Test three different SIDs
 sendUDSPacketandPrint(TesterPresentSID)
 sendUDSPacketandPrint(DiagnosticSessionControlSID)
-sendUDSPacketandPrint(RandomSID)
+sendUDSPacketandPrint(TesterPresentInvalidSID)
 
 
 
