@@ -413,6 +413,8 @@ void ETH_PHYRead(uint16_t PHYReg, uint16_t *PHYRegValue);
 void ETH_DMATxDescInit(ETH_TxDescriptor *DMATxDesc);
 void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength);
 void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc);
+void ETH_RxCallback(void);
+
 
 /* Other */
 void SYSCFG_SelectRMII(void);
@@ -425,5 +427,6 @@ extern uint8_t Rxbuff[RX_DESCRIPTORS*2][RX_BUF_SIZE];
 
 extern ETH_MACInit MACInit;
 extern ETH_DMAInit DMAInit;
+
 
 #endif /* ETHERNET_H_ */

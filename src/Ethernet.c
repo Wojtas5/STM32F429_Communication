@@ -643,4 +643,3 @@ void SYSCFG_SelectRMII(void)
 {
 	SYSCFG->PMC |= ETH_RMII_SELECT;
 }
-

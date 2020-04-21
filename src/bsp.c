@@ -89,4 +89,3 @@ void RCC_SYSCFGEnable(void)
 	RCC->APB2ENR |= SYSCFG_ENABLE;
 }
 
-
