@@ -30,9 +30,17 @@ uint8_t SrcIP[4]  = {192, 168, 0, 10}; // Microcontroller IP address
 struct ETH_Header ethhdr;
 struct IP_Header iphdr;
 
+/* Function prototypes */
+void ETH_SendErrorFrame(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength);
+
 
 int main(void)
 {
+	volatile uint16_t Framelength;
+
+	const uint8_t Responseheader[2] = {0x06, 0x1C};
+	const uint8_t Errorheader[2]    = {0x03, 0xC4};
+
 	/* Initialize onboard LEDs and a button */
 	BSP_Init();
 

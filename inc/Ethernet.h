@@ -219,6 +219,7 @@ struct ETH_Header {
 
 #define TX_DESC_BUF1SIZE_MAX                ((uint32_t)0x00001FFF)
 #define TX_DESC_BUF2SIZE_MAX                ((uint32_t)0x1FFF0000)
+#define TX_DESC_BUFFER2_OFFSET				16U
 
 /* ETH_RxDescriptor */
 #define RX_DESC_OWN 					  ((uint32_t)(1U << 31))
