@@ -188,6 +188,7 @@ struct ETH_Header {
 /* ETH_TxDescriptor */
 #define TX_DESC_OWN 						((uint32_t)(1U << 31))
 #define TX_DESC_INT_ON_COMPLETION_ENABLED 	((uint32_t)(1U << 30))
+#define TX_DESC_INT_ON_COMPLETION_DISABLED 	((uint32_t)(0U << 30))
 #define TX_DESC_LAST_SEGMENT			    ((uint32_t)(1U << 29))
 #define TX_DESC_FIRST_SEGMENT			    ((uint32_t)(1U << 28))
 #define TX_DESC_DISABLE_CRC 				((uint32_t)(1U << 27))
@@ -208,9 +209,12 @@ struct ETH_Header {
 
 #define TX_DESC_BUF1SIZE_MAX                ((uint32_t)0x00001FFF)
 #define TX_DESC_BUF2SIZE_MAX                ((uint32_t)0x1FFF0000)
+#define TX_DESC_BUFFER2_OFFSET				16U
 
 /* ETH_RxDescriptor */
 #define RX_DESC_OWN 					  ((uint32_t)(1U << 31))
+#define RX_FRAMELENGTH_MAX 				  ((uint32_t)0x3FFF0000U)
+#define RX_FRAMELENGTH_OFFSET			  16U
 #define RX_DESC_FIRST_DESCRIPTOR		  ((uint32_t)(1U << 9))
 #define RX_DESC_LAST_DESCRIPTOR		   	  ((uint32_t)(1U << 8))
 #define RX_DESC_INT_ON_COMPLETION_ENABLED ((uint32_t)(0U << 31))
@@ -322,9 +326,17 @@ struct ETH_Header {
 #define START_DMA_RECEIVE      						 ((uint32_t)(1U << 1))
 
 /* DMASR */
+#define NORMAL_INTERRUPT_SUMMARY 	((uint32_t)(1U << 16))
+#define RECEIVE_BUFFER_UNAVAILABLE  ((uint32_t)(1U << 7))
+#define RECEIVE_FINISHED 		 	((uint32_t)(1U << 6))
 #define TRANSMIT_BUFFER_UNAVAILABLE ((uint32_t)(1U << 2))
 #define TRANSMIT_FINISHED           ((uint32_t)(1U << 0))
 
+/* DMAIER */
+#define NORMAL_INTERRUPT_ENABLE 			   ((uint32_t)(1U << 16))
+#define RECEIVE_INTERRUPT_ENABLE 			   ((uint32_t)(1U << 6))
+#define TX_BUFFER_UNAVAILABLE_INTERRUPT_ENABLE ((uint32_t)(1U << 2))
+#define TRANSMIT_INTERRUPT_ENABLE 			   ((uint32_t)(1U << 0))
 
 /* ============================== */
 /*  PHY registers related macros  */
@@ -406,6 +418,7 @@ void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc);
 /* Other */
 void SYSCFG_SelectRMII(void);
 
+/* Exported variables and structures */
 extern ETH_TxDescriptor DMATxDesc[TX_DESCRIPTORS];
 extern ETH_RxDescriptor DMARxDesc[RX_DESCRIPTORS];
 extern uint8_t Txbuff[TX_DESCRIPTORS*2][TX_BUF_SIZE];

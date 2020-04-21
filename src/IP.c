@@ -6,8 +6,8 @@
  */
 
 #include "IP.h"
-#include "string.h"
 #include "misc.h"
+#include "string.h"
 
 /* Initialize IP_Header structure with default values and calculate total length and Checksum */
 void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uint16_t len)
