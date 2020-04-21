@@ -39,7 +39,7 @@ int main(void)
 	/* Initialize Ethernet peripheral */
 	Ethernet_Init();
 
-	/* Set MAC address of the microcontroller for filtering */
+	/* Set MAC address of the microcontroller and PC for filtering */
 	ETH_SetMACAddress(MAC0, SrcAddr);
 	ETH_SetMACAddress(MAC1, DestAddr);
 
@@ -58,7 +58,6 @@ int main(void)
 
 	/* Initialize IP header structure */
 	IP_StructInit(&iphdr, SrcIP, DestIP, 0U);
-
 
 	while(1)
 	{
