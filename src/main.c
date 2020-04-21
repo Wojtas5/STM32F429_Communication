@@ -13,12 +13,11 @@
 #include "Ethernet.h"
 #include "IP.h"
 #include "misc.h"
-#include "string.h"
+#include "UDS.h"
 
 /* Macros */
 #define SIZE_OF_HEADERS 34U
-#define SIZE_OF_CRC     4U
-#define MAX_FRAME_SIZE  83U
+#define DISABLED 		((uint32_t)0U)
 
 /* Global variables */
 uint8_t DestAddr[6] = {0x50, 0x9A, 0x4C, 0x36, 0x00, 0x45}; // MAC address of PC
@@ -48,11 +47,13 @@ int main(void)
 	/* Initialize Ethernet peripheral */
 	Ethernet_Init();
 
-	/* Set MAC address of the microcontroller for filtering */
-	ETH_SetHWMACAddress(SrcAddr);
+	/* Set MAC address of the microcontroller and PC for filtering */
+	ETH_SetMACAddress(MAC0, SrcAddr);
+	ETH_SetMACAddress(MAC1, DestAddr);
 
 	/* Initialize transmit descriptor */
 	ETH_DMATxDescInit(DMATxDesc);
+	DMATxDesc->ControlAndStatus |= TX_DESC_DISABLE_PAD;
 
 	/* Initialize receive descriptor */
 	ETH_DMARxDescInit(DMARxDesc);
@@ -63,43 +64,19 @@ int main(void)
 	/* Initialize Ethernet header structure */
 	ETH_HeaderStructInit(&ethhdr, DestAddr, SrcAddr);
 
-	/* Prepare response in the first buffer */
-	memcpy((uint8_t *)DMATxDesc->Buf1Addr, (uint8_t *)&ethhdr, sizeof(struct ETH_Header));
-	memcpy((uint8_t *)DMATxDesc->Buf1Addr + SIZE_OF_HEADERS, Responseheader, sizeof(Responseheader));
-
-	/* Prepare error message in the second buffer */
-	IP_StructInit(&iphdr, SrcIP, DestIP, sizeof(Errorheader));
-	memcpy((uint8_t *)DMATxDesc->Buf2NextDescAddr, (uint8_t *)&ethhdr, sizeof(struct ETH_Header));
-	memcpy((uint8_t *)(DMATxDesc->Buf2NextDescAddr + sizeof(struct ETH_Header)), (uint8_t *)&iphdr, sizeof(struct IP_Header));
-	memcpy((uint8_t *)DMATxDesc->Buf2NextDescAddr + SIZE_OF_HEADERS, Errorheader, sizeof(Errorheader));
+	/* Initialize IP header structure */
+	IP_StructInit(&iphdr, SrcIP, DestIP, 0U);
 
 	while(1)
 	{
 		/* Check if we have received any message */
 		if((ETH->DMASR & RECEIVE_FINISHED) == RECEIVE_FINISHED)
 		{
-			/* Calculate length of received frame */
-			Framelength = ((DMARxDesc->Status & RX_FRAMELENGTH_MAX) >> RX_FRAMELENGTH_OFFSET) - SIZE_OF_CRC;
+			/* Added small delay for better stability on script side */
+			BSP_Delay_ms(1);
 
-			if (Framelength < MAX_FRAME_SIZE)
-			{
-				/* Calculate Total Length as well as checksum for outgoing frame */
-				IP_StructInit(&iphdr, SrcIP, DestIP, Framelength + sizeof(Responseheader));
-
-				/* Place IP header as well as response message in Tx buffer 1 */
-				memcpy((uint8_t *)(DMATxDesc->Buf1Addr + sizeof(struct ETH_Header)), (uint8_t *)&iphdr, sizeof(struct IP_Header));
-				memcpy((uint8_t *)DMATxDesc->Buf1Addr + SIZE_OF_HEADERS + sizeof(Responseheader),
-						Rxbuff[0], swap_uint16(iphdr.TotalLength) - sizeof(struct IP_Header));
-
-				/* Send response */
-				ETH_DMAPrepareTxDesc(DMATxDesc, sizeof(struct ETH_Header) + swap_uint16(iphdr.TotalLength));
-			}
-
-			else
-			{
-				/* Send error frame */
-				ETH_SendErrorFrame(DMATxDesc, SIZE_OF_HEADERS + sizeof(Errorheader));
-			}
+			/* Decode the message and respond to it */
+			UDS_Respond((uint8_t *)DMARxDesc->Buf1Addr + SIZE_OF_HEADERS);
 
 			/* Clear receive status and buffer unavailable status */
 			ETH->DMASR = RECEIVE_FINISHED | RECEIVE_BUFFER_UNAVAILABLE;
@@ -110,31 +87,11 @@ int main(void)
 	}
 }
 
-
-void ETH_SendErrorFrame(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength)
+/* Enable MAC address filtering */
+void ETH_MACUserStructInit(ETH_MACInit *macinit)
 {
-	/* Check if the descriptor is owned by DMA or CPU, if by CPU then continue */
-	if((DMATxDesc->ControlAndStatus & TX_DESC_OWN) != 0)
-	{
-		/* TODO add delay on Systick or return some status */
-		BSP_Delay_ms(1);
-	}
-
-	/* Set the exact size of frame to be transferred */
-	DMATxDesc->BufSize = 0U;
-	DMATxDesc->BufSize = ((Framelength << TX_DESC_BUFFER2_OFFSET) & TX_DESC_BUF2SIZE_MAX);
-
-	/* Frame is ready to be sent, give control do DMA */
-	DMATxDesc->ControlAndStatus |= TX_DESC_OWN;
-
-	/* Check for Transmit buffer unavailable flag, clear if set */
-	if((ETH->DMASR & TRANSMIT_BUFFER_UNAVAILABLE) != 0)
-	{
-	    /* Clear Transmit buffer unavailable flag */
-	    ETH->DMASR = TRANSMIT_BUFFER_UNAVAILABLE;
-
-	    /* Resume DMA transmission*/
-	    ETH->DMATPDR = 0;
-	}
+	macinit->ReceiveAll = DISABLED;
+	macinit->SourceAddressFilter = SOURCE_ADDRESS_FILTER_ENABLED;
+	macinit->BroadcastFramesFilter = BROADCAST_FRAMES_FILTER_ENABLED;
 }
 

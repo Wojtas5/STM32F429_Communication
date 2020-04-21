@@ -10,6 +10,14 @@
 
 #include "stdint.h"
 
+typedef enum {
+	MAC0 = 0x00U,
+	MAC1 = 0x08U,
+	MAC2 = 0x10U,
+	MAC3 = 0x18U
+} ETH_MACAddr;
+
+
 typedef struct {
 	uint16_t LoopbackMode;
 
@@ -52,6 +60,8 @@ typedef struct {
 	uint32_t DeferralCheck;
 
 	uint32_t ReceiveAll;
+
+	uint32_t BroadcastFramesFilter;
 
 	uint32_t SourceAddressFilter;
 
@@ -290,8 +300,10 @@ struct ETH_Header {
 #define VLAN_TAG_12BIT ((uint32_t)(1U << 16))
 
 /* MACA0HR - MACA3LR */
-#define MAC_ADDR0HR_MO ((uint32_t)(1U << 31))
-
+#define MAC_ADDR_ENABLE ((uint32_t)(1U << 31))
+#define MAC_BASE        ((uint32_t)0x40028000)
+#define MAC_ADDR_HBASE  ((uint32_t)MAC_BASE + (uint32_t)0x40U)
+#define MAC_ADDR_LBASE  ((uint32_t)MAC_BASE + (uint32_t)0x44U)
 
 /* ============================== */
 /*  DMA registers related macros  */
@@ -395,7 +407,7 @@ void ETH_MACConfig(ETH_MACInit *macinit);
 void ETH_DMAStructInit(ETH_DMAInit *dmainit);
 void ETH_DMAUserStructInit(ETH_DMAInit *dmainit);
 void ETH_DMAConfig(ETH_DMAInit *dmainit);
-void ETH_SetHWMACAddress(uint8_t *addr);
+void ETH_SetMACAddress(ETH_MACAddr MAC ,uint8_t *addr);
 void ETH_MACTxEnable(void);
 void ETH_MACTxDisable(void);
 void ETH_MACRxEnable(void);
@@ -414,6 +426,7 @@ void ETH_PHYRead(uint16_t PHYReg, uint16_t *PHYRegValue);
 void ETH_DMATxDescInit(ETH_TxDescriptor *DMATxDesc);
 void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength);
 void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc);
+void ETH_RxCallback(void);
 
 /* Other */
 void SYSCFG_SelectRMII(void);

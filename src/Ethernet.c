@@ -258,6 +258,7 @@ void ETH_MACConfig(ETH_MACInit *macinit)
 	tempreg = ETH->MACFFR;
 
 	tempreg = (macinit->ReceiveAll |
+			   macinit->BroadcastFramesFilter |
 			   macinit->SourceAddressFilter |
 			   macinit->PassControlFrames |
 			   macinit->PromiscuousMode);
@@ -358,10 +359,16 @@ void ETH_DMAConfig(ETH_DMAInit *dmainit)
 }
 
 
-void ETH_SetHWMACAddress(uint8_t *addr)
+void ETH_SetMACAddress(ETH_MACAddr MAC, uint8_t *addr)
 {
-	ETH->MACA0HR = (MAC_ADDR0HR_MO | (addr[5] << 8) | addr[4]);
-	ETH->MACA0LR = ((addr[3] << 24) | (addr[2] << 16) | (addr[1] << 8) | addr[0]);
+	uint32_t temphreg = 0U;
+	uint32_t templreg = 0U;
+
+	temphreg = (MAC_ADDR_ENABLE | (addr[5] << 8) | addr[4]);
+	templreg = ((addr[3] << 24) | (addr[2] << 16) | (addr[1] << 8) | addr[0]);
+
+	(*(uint32_t *)((uint32_t)(MAC_ADDR_HBASE + MAC))) = temphreg;
+	(*(uint32_t *)((uint32_t)(MAC_ADDR_LBASE + MAC))) = templreg;
 }
 
 /* This function enables MAC transmitter */
@@ -643,4 +650,3 @@ void SYSCFG_SelectRMII(void)
 {
 	SYSCFG->PMC |= ETH_RMII_SELECT;
 }
-
