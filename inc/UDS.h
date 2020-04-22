@@ -24,10 +24,17 @@ struct UDS_Pos {
 
 	uint8_t RequestedSID;
 
-} __attribute__ ((packed));;
+} __attribute__ ((packed));
 
+/* Services */
+#define UDS_ECU_RESET_RQ_SID 				((uint8_t)0x11U)
+#define UDS_ECU_RESET_RP_SID 				((uint8_t)0x51U)
 #define UDS_TESTER_PRESENT_RQ_SID 			((uint8_t)0x3EU)
 #define UDS_TESTER_PRESENT_RP_SID 			((uint8_t)0x7EU)
+
+#define UDS_RESPONSE_SID_OFFSET 			((uint8_t)0x40U)
+
+/* Error SIDs */
 #define UDS_COMMAND_NOT_SUPPORTED 			((uint8_t)0x7FU)
 #define UDS_INCORRECT_MSG_LEN_OR_INV_FORMAT ((uint8_t)0x13U)
 #define UDS_SERVICE_NOT_SUPPORTED 			((uint8_t)0x11U)
@@ -38,5 +45,9 @@ struct UDS_Pos {
 /* ===================== */
 
 void UDS_Respond(uint8_t *msg);
+uint8_t *UDS_IncorrectMsgLenOrInvFormat(uint8_t RequestSID);
+uint8_t *UDS_ServiceNotSupported(uint8_t RequestSID);
+uint8_t *UDS_PrepareNegResponse(uint8_t RequestSID, uint8_t ErrorSID);
+uint8_t *UDS_PreparePosResponse(uint8_t RequestSID);
 
 #endif /* UDS_H_ */

@@ -88,7 +88,6 @@
 /*  Function prototypes  */
 /* ===================== */
 void BSP_Init(void);
-void BSP_Delay_ms(uint16_t time);
 void BSP_LedGreenOn(void);
 void BSP_LedGreenOff(void);
 void BSP_LedBlueOn(void);

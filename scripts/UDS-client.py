@@ -20,21 +20,26 @@ def sendUDSPacketandPrint(msg):
 destaddress = '192.168.0.10'
 srcaddress  = '192.168.0.11'
 
-# Tester Present SID
+# Service SIDs
 TesterPresentSID = b'\x3E'
+ECUResetSID = b'\x11'
 
 # Other SIDs
 DiagnosticSessionControlSID = b'\x10'
 TesterPresentInvalidSID = b'\x3E\xFF\xFF'
+ECUResetInvalidSID = b'\x11\3E'
 
 # Name of network interface card
 eth = 'Realtek PCIe GBE Family Controller'
 
-# Test three different SIDs
+# Test different SIDs
 sendUDSPacketandPrint(TesterPresentSID)
 sendUDSPacketandPrint(DiagnosticSessionControlSID)
 sendUDSPacketandPrint(TesterPresentInvalidSID)
 
+sendUDSPacketandPrint(ECUResetInvalidSID)
+sendUDSPacketandPrint(ECUResetSID)
 
-
-
+# Wait a few seconds after reset then use Tester Present service
+time.sleep(5)
+sendUDSPacketandPrint(TesterPresentSID)

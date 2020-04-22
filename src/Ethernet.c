@@ -56,7 +56,7 @@ void Ethernet_Init(void)
 
 	/* 500ms delay after reset */
 	/* TODO use Systick or timer delay */
-	BSP_Delay_ms(PHY_SOFTRESET_DELAY);
+	Delay_ms(PHY_SOFTRESET_DELAY);
 
 	/* Wait for SOFTRESET bit to clear */
 	do
@@ -582,7 +582,7 @@ void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength)
 	if((DMATxDesc->ControlAndStatus & TX_DESC_OWN) != 0)
 	{
 		/* TODO add delay on Systick or return some status */
-		BSP_Delay_ms(1);
+		Delay_ms(1);
 	}
 
 	/* Set the exact size of frame to be transferred */

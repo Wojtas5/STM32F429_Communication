@@ -30,11 +30,6 @@ void BSP_Init(void)
 	NVIC_EnableIRQ(EXTI15_10_IRQn);                              // Enable specific interrupt in NVIC
 }
 
-void BSP_Delay_ms(uint16_t time)
-{
-	for (int i = 0; i < 4000*time; i++);
-}
-
 void BSP_LedGreenOn(void)
 {
 	GPIOB->ODR |= LED_GREEN;
