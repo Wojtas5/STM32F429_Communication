@@ -16,8 +16,8 @@
 #include "UDS.h"
 
 /* Macros */
-#define SIZE_OF_HEADERS 34U
-#define DISABLED 		((uint32_t)0U)
+#define SIZE_OF_HEADERS    34U
+#define DISABLED 		   ((uint32_t)0U)
 
 /* Global variables */
 uint8_t DestAddr[6] = {0x50, 0x9A, 0x4C, 0x36, 0x00, 0x45}; // MAC address of PC
@@ -31,18 +31,17 @@ struct ETH_Header ethhdr;
 struct IP_Header iphdr;
 
 /* Function prototypes */
-void ETH_SendErrorFrame(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength);
 
 
 int main(void)
 {
-	volatile uint16_t Framelength;
-
-	const uint8_t Responseheader[2] = {0x06, 0x1C};
-	const uint8_t Errorheader[2]    = {0x03, 0xC4};
-
 	/* Initialize onboard LEDs and a button */
 	BSP_Init();
+
+	/* Initialize Systick timer peripheral */
+	/* For some reason variable SystemCoreClock divided by 1000 doesn't gives us 1 tick per 1 ms
+	 * TODO Check why 60000 is the good value */
+	Systick_Init(60000U);
 
 	/* Initialize Ethernet peripheral */
 	Ethernet_Init();
@@ -73,7 +72,7 @@ int main(void)
 		if((ETH->DMASR & RECEIVE_FINISHED) == RECEIVE_FINISHED)
 		{
 			/* Added small delay for better stability on script side */
-			BSP_Delay_ms(1);
+			SysTick_Delay(1);
 
 			/* Decode the message and respond to it */
 			UDS_Respond((uint8_t *)DMARxDesc->Buf1Addr + SIZE_OF_HEADERS);
