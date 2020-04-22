@@ -12,6 +12,7 @@
 
 struct UDS_Neg udsneg;
 struct UDS_Pos udspos;
+struct UDS_PosDID udsposdid;
 
 extern struct ETH_Header ethhdr;
 extern struct IP_Header iphdr;
@@ -48,6 +49,10 @@ void UDS_Respond(uint8_t *msg)
 			{
 				response = UDS_IncorrectMsgLenOrInvFormat(requestedSID);
 			}
+			break;
+
+		case UDS_READ_DATA_BY_ID_RQ_SID:
+			response = UDS_ReadDataByID(msg);
 			break;
 
 		default:
@@ -99,4 +104,27 @@ uint8_t *UDS_PreparePosResponse(uint8_t RequestSID)
 	iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_Pos));
 
 	return (uint8_t *)&udspos;
+}
+
+
+uint8_t *UDS_ReadDataByID(uint8_t *msg)
+{
+	uint16_t *dataid = (uint16_t *)(&msg[1]);
+	*dataid = swap_uint16(*dataid);
+
+	if(UDS_TIME_FROM_STARTUP_DID == *dataid)
+	{
+		udsposdid.PositiveSID = msg[0];
+		udsposdid.DID = swap_uint16(*dataid);
+		udsposdid.DataRecord = swap_uint16((uint16_t)(SysTick_GetTick()/1000));
+	}
+
+	else
+	{
+		return UDS_IncorrectMsgLenOrInvFormat(msg[0]);
+	}
+
+	iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_PosDID));
+
+	return (uint8_t *)&udsposdid;
 }

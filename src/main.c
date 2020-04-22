@@ -72,7 +72,7 @@ int main(void)
 		if((ETH->DMASR & RECEIVE_FINISHED) == RECEIVE_FINISHED)
 		{
 			/* Added small delay for better stability on script side */
-			SysTick_Delay(1);
+			SysTick_Delay(2);
 
 			/* Decode the message and respond to it */
 			UDS_Respond((uint8_t *)DMARxDesc->Buf1Addr + SIZE_OF_HEADERS);
