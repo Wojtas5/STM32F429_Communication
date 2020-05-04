@@ -15,6 +15,6 @@ if __name__ == '__main__':
     EXPECT_EQ(sendUDSPacketandPrint(ECUResetInvalidSID), ECUResetInvalidRPSID)
     EXPECT_EQ(sendUDSPacketandPrint(ReadDataByIndentifierSID+InvalidDID), InvalidRPDID)
 
-    SUMMARY()
+    TEST.main()
 
 
