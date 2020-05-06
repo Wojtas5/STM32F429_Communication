@@ -3,18 +3,18 @@ from UDSClient import *
 import time
 
 if __name__ == '__main__':
-    TEST('UDSTest', 'Positive')
-    EXPECT_EQ(sendUDSPacketandPrint(TesterPresentSID), TesterPresentRPSID)
-    EXPECT_NE(sendUDSPacketandPrint(ReadDataByIndentifierSID+TimeFromStartupDID), InvalidRPDID)
-    EXPECT_EQ(sendUDSPacketandPrint(ECUResetSID), ECUResetRPSID)
+    suite1 = Suite('UDSTest')
+    suite1.addTest('Services')
+    suite1.EQ(TesterPresentRPSID, sendUDSPacketandPrint(TesterPresentSID))
+    suite1.NE(InvalidRPDID, sendUDSPacketandPrint(ReadDataByIndentifierSID+TimeFromStartupDID))
+    suite1.EQ(ECUResetRPSID , sendUDSPacketandPrint(ECUResetSID))
     time.sleep(3)
 
-    TEST('UDSTest', 'Negative')
-    EXPECT_NE(sendUDSPacketandPrint(DiagnosticSessionControlSID), DiagnosticSessionControlRPSID)
-    EXPECT_EQ(sendUDSPacketandPrint(TesterPresentInvalidSID), TesterPresentInvalidRPSID)
-    EXPECT_EQ(sendUDSPacketandPrint(ECUResetInvalidSID), ECUResetInvalidRPSID)
-    EXPECT_EQ(sendUDSPacketandPrint(ReadDataByIndentifierSID+InvalidDID), InvalidRPDID)
+    suite1.addTest('Errors')
+    suite1.NE(DiagnosticSessionControlRPSID, sendUDSPacketandPrint(DiagnosticSessionControlSID))
+    suite1.EQ(TesterPresentInvalidRPSID, sendUDSPacketandPrint(TesterPresentInvalidSID))
+    suite1.EQ(ECUResetInvalidRPSID, sendUDSPacketandPrint(ECUResetInvalidSID))
+    suite1.EQ(InvalidRPDID, sendUDSPacketandPrint(ReadDataByIndentifierSID + InvalidDID))
 
-    TEST.main()
-
+    TEST(suite1)
 

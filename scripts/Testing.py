@@ -3,57 +3,45 @@ import datetime as dt
 
 
 class TEST:
-    suites = []
     failedTestsNames = []
     passedTests = 0
     failedTests = 0
     failed = False
 
-    times = []
     totalTime = 0
     suiteTime = 0
-    starttime = 0
 
-    def __new__(cls, suite, test):
-        if cls.suites != []:
-            time = ((dt.datetime.now() - cls.starttime).total_seconds() * 1000)
-            cls.times.append(time)
-        cls.suites.append([suite, test])
-        EXPECT_EQ.itersAppend()
-        EXPECT_NE.itersAppend()
-        cls.starttime = dt.datetime.now()
+    def __new__(cls, *args):
+        time = ((dt.datetime.now() - Suite.starttime).total_seconds() * 1000)
+        Suite.times.append(time)
+        cls.prevsuite = args[0].name
+        cls.main(*args)
 
     @classmethod
-    def TEST_SUMMARY(cls, suite, test):
-        idx = cls.suites.index([suite, test])
-        time = cls.times[idx]
+    def TEST_SUMMARY(cls, suite, test, time):
         cls.suiteTime += time
         cls.totalTime += time
 
         if not cls.failed:
-            print("[       OK ] {0}.{1} ({2} ms)".format(suite, test, round(time, 2)))
+            print("[       OK ] {0}.{1} ({2} ms)".format(suite.name, test, round(time, 2)))
             cls.passedTests += 1
         else:
-            print("[  FAILED  ] {0}.{1} ({2} ms)".format(suite, test, round(time, 2)))
+            print("[  FAILED  ] {0}.{1} ({2} ms)".format(suite.name, test, round(time, 2)))
             cls.failedTests += 1
-            cls.failedTestsNames.append('{0}.{1}'.format(suite, test))
+            cls.failedTestsNames.append('{0}.{1}'.format(suite.name, test))
 
-        if idx+1 < len(cls.suites):
-            nextsuite = cls.suites[idx+1][0]
-        else:
-            nextsuite = ''  # There is no next suites, so we need a value to pass the next if statement
-
-        if suite != nextsuite:
-            print("[----------] {0} tests from {1} ({2} ms total)".format(cls.testsQuantity(suite),
-                                                                          suite, round(cls.suiteTime, 2)))
+        if suite.name != cls.prevsuite:
+            print("[----------] {0} tests from {1} ({2} ms total)".format(int(len(suite.tests)/2),
+                                                                          suite.name, round(cls.suiteTime, 2)))
             cls.suiteTime = 0
 
+        cls.prevsuite = suite
         cls.failed = False
 
     @classmethod
-    def SUMMARY(cls):
-        print("[==========] {0} tests from {1} test suites ran. ({2} ms total)".format(len(cls.suites),
-                                                                                       cls.suitesQuantity(),
+    def SUMMARY(cls, *args):
+        print("[==========] {0} tests from {1} test suites ran. ({2} ms total)".format(cls.testsQuantity(*args),
+                                                                                       cls.suitesQuantity(*args),
                                                                                        round(cls.totalTime, 2)))
         print("[  PASSED  ] {0} tests.".format(cls.passedTests))
         if cls.failedTests != 0:
@@ -65,22 +53,15 @@ class TEST:
             print("[  FAILED  ] {0}".format(name))
 
     @classmethod
-    def testsQuantity(cls, suite):
+    def testsQuantity(cls, *args):
         tests = 0
-        for s, t in cls.suites:
-            if s == suite:
-                tests += 1
+        for suite in args:
+            tests += int(len(suite.tests)/2)
         return tests
 
     @classmethod
-    def suitesQuantity(cls):
-        suites = 0
-        prev = ''
-        for s, t in cls.suites:
-            if s != prev:
-                suites += 1
-            prev = s
-        return suites
+    def suitesQuantity(cls, *args):
+        return len(args)
 
     @classmethod
     def EXPECT_EQ(cls, val1, val2, line):
@@ -93,7 +74,7 @@ class TEST:
 
         except ValueError:
             # Retrieve original arguments
-            frame = getframeinfo(currentframe().f_back.f_back)
+            frame = getframeinfo(currentframe().f_back.f_back.f_back)
             f = open(frame.filename)
             for i, c in enumerate(f):
                 if i == line - 1:
@@ -103,7 +84,7 @@ class TEST:
             args = content[content.find('(') + 1:-2].split(', ')
 
             # Print error message
-            print("{0}:{1}: Failure".format(getframeinfo(currentframe().f_back).filename, line))
+            print("{0}:{1}: Failure".format(frame.filename, line))
             print("Expected equality of these values:\n  {0}\n  {1}\n  Which is: {2}".format(args[0], args[1], val2))
 
     @classmethod
@@ -117,7 +98,7 @@ class TEST:
 
         except ValueError:
             # Retrieve original arguments
-            frame = getframeinfo(currentframe().f_back.f_back)
+            frame = getframeinfo(currentframe().f_back.f_back.f_back)
             f = open(frame.filename)
             for i, c in enumerate(f):
                 if i == line - 1:
@@ -131,65 +112,62 @@ class TEST:
             print("Expected: ({0}) != ({1}), actual: {2} vs {3}".format(args[0], args[1], val1, val2))
 
     @classmethod
-    def main(cls):
+    def main(cls, *args):
         # setUp()
-        time = ((dt.datetime.now() - cls.starttime).total_seconds() * 1000)
-        cls.times.append(time)
-        print("[==========] Running {0} tests from {1} test suites".format(len(cls.suites), cls.suitesQuantity()))
-        EQ = 0
-        NE = 0
+        print("[==========] Running {0} tests from {1} test suites".format(cls.testsQuantity(*args),
+                                                                           cls.suitesQuantity(*args)))
+        t = 0
 
-        for tests in range(len(cls.suites)):
-            suite, test = cls.suites[tests]
-            print("[ RUN      ] {0}.{1}".format(suite, test))
+        for suite in args:
+            EQiter = iter(suite.equal)
+            NEiter = iter(suite.notequal)
+            for i in range(int(len(suite.tests)/2)):
+                test = suite.tests[2*i]
+                E, N = suite.tests[(2*i)+1]
+                print("[ RUN      ] {0}.{1}".format(suite.name, test))
 
-            for i in range(EXPECT_EQ.iters[tests]):
-                val1, val2 = EXPECT_EQ.values[EQ]
-                cls.EXPECT_EQ(val1, val2, EXPECT_EQ.lines[EQ])
-                EQ += 1
+                for pair in range(E):
+                    val1, val2, line = next(EQiter)
+                    cls.EXPECT_EQ(val1, val2, line)
 
-            for i in range(EXPECT_NE.iters[tests]):
-                val1, val2 = EXPECT_NE.values[NE]
-                cls.EXPECT_NE(val1, val2, EXPECT_NE.lines[NE])
-                NE += 1
+                for pair in range(N):
+                    val1, val2, line = next(NEiter)
+                    cls.EXPECT_NE(val1, val2, line)
 
-            cls.TEST_SUMMARY(suite, test)
+                cls.TEST_SUMMARY(suite, test, Suite.times[t])
+                t += 1
 
-        cls.SUMMARY()
+        cls.SUMMARY(*args)
         # tearDown()
 
 
-class EXPECT_EQ:
-    values = []
-    iters = []
-    lines = []
-    n = -1
+class Suite:
+    times = []
+    starttime = 0
 
-    def __new__(cls, val1, val2):
+    def __init__(self, name):
+        self.name = name
+        self.tests = []
+        self.equal = []
+        self.notequal = []
+
+    def addTest(self, test):
+        if Suite.starttime != 0:
+            time = ((dt.datetime.now() - Suite.starttime).total_seconds() * 1000)
+            Suite.times.append(time)
+        Suite.starttime = dt.datetime.now()
+        self.tests.append(test)
+        self.tests.append([0, 0])
+        self.test = test
+
+    def EQ(self, val1, val2):
+        idx = self.tests.index(self.test)
+        self.tests[idx+1][0] += 1
         line = currentframe().f_back.f_lineno
-        cls.lines.append(line)
-        cls.values.append([val1, val2])
-        cls.iters[cls.n] += 1
+        self.equal.append([val1, val2, line])
 
-    @classmethod
-    def itersAppend(cls):
-        cls.iters.append(0)
-        cls.n += 1
-
-
-class EXPECT_NE:
-    values = []
-    iters = []
-    lines = []
-    n = -1
-
-    def __new__(cls, val1, val2):
+    def NE(self, val1, val2):
+        idx = self.tests.index(self.test)
+        self.tests[idx+1][1] += 1
         line = currentframe().f_back.f_lineno
-        cls.lines.append(line)
-        cls.values.append([val1, val2])
-        cls.iters[cls.n] += 1
-
-    @classmethod
-    def itersAppend(cls):
-        cls.iters.append(0)
-        cls.n += 1
+        self.notequal.append([val1, val2, line])
