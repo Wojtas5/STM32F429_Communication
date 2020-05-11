@@ -27,5 +27,6 @@ void Delay_ms(uint16_t time);
 void Systick_Init(uint32_t ticks);
 uint32_t SysTick_GetTick(void);
 void SysTick_Delay(uint32_t time);
+uint32_t FormatTime(uint32_t Time);
 
 #endif /* MISC_H_ */

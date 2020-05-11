@@ -10,7 +10,7 @@
 #include "misc.h"
 
 /* Global variables */
-uint32_t Tick;
+volatile uint32_t Tick;
 
 uint16_t swap_uint16(uint16_t val)
 {
@@ -63,4 +63,20 @@ void SysTick_Delay(uint32_t time)
 	while((SysTick_GetTick() - tickstart) < time)
 	{
 	}
+}
+
+
+uint32_t FormatTime(uint32_t Time)
+{
+	uint32_t ftime;
+	uint8_t h, m, s, ms;
+
+	h = (uint8_t)((Time/1000)/3600);
+	m = (uint8_t)(((Time - (h*3600*1000))/1000)/60);
+	s = (uint8_t)((Time - (h*3600*1000) - (m*60*1000))/1000);
+	ms = (uint8_t)((Time - (h*3600*1000) - (m*60*1000) - (s*1000))/10); // Miliseconds are divided by 10 to fit on 8 bytes
+
+	ftime = (uint32_t)(h << 24 | m << 16 | s << 8 | ms);
+
+	return ftime;
 }
