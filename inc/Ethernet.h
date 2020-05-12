@@ -10,6 +10,14 @@
 
 #include "stdint.h"
 
+#define DISABLED 			((uint32_t)0U)
+#define RESET	 			((uint32_t)0U)
+#define SIZE_OF_CRC 		4U
+#define SIZE_OF_ETH_HEADER  14U
+#define SIZE_OF_IP_HEADER   20U
+#define SIZE_OF_HEADERS 	34U
+
+
 typedef enum {
 	MAC0 = 0x00U,
 	MAC1 = 0x08U,
@@ -169,7 +177,17 @@ typedef struct {
 	uint32_t TimeStampHigh;
 #endif
 
-} ETH_RxDescriptor ;
+} ETH_RxDescriptor;
+
+
+typedef struct {
+	uint16_t Framelength;
+
+	uint32_t Buffer;
+
+	ETH_RxDescriptor *Desc;
+
+} ETH_RxFrame;
 
 
 struct ETH_Header {
@@ -193,7 +211,7 @@ struct ETH_Header {
 #define RX_BUF_SIZE ETH_MAX_PACKET_SIZE
 
 #define TX_DESCRIPTORS 3U
-#define RX_DESCRIPTORS 3U
+#define RX_DESCRIPTORS 10U
 
 /* ETH_TxDescriptor */
 #define TX_DESC_OWN 						((uint32_t)(1U << 31))
@@ -424,8 +442,10 @@ void ETH_MACReset(void);
 void ETH_PHYWrite(uint16_t PHYReg, uint16_t PHYRegValue);
 void ETH_PHYRead(uint16_t PHYReg, uint16_t *PHYRegValue);
 void ETH_DMATxDescInit(ETH_TxDescriptor *DMATxDesc);
-void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength);
+void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength, uint32_t buffer);
 void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc);
+void ETH_DMARxDescListInit(ETH_RxDescriptor *DMARxDesc, uint8_t buffcount);
+void ETH_ReceiveFrame(ETH_RxFrame *rxframe);
 void ETH_RxCallback(void);
 
 /* Other */
