@@ -63,5 +63,9 @@ struct IP_Header {
 void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uint16_t len);
 uint16_t IP_CalculateChecksum(struct IP_Header *iphdr);
 void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data);
+void IP_PrepareStaticMessage(uint8_t *srcip, uint8_t *destip,
+							 ETH_TxDescriptor *DMATxDesc, uint32_t buffer,
+		 	 	 	 	 	 struct ETH_Header *ethhdr, struct IP_Header *iphdr,
+							 const uint8_t *data, uint16_t datasize);
 
 #endif /* IP_H_ */
