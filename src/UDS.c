@@ -10,13 +10,12 @@
 #include "IP.h"
 #include "misc.h"
 
-static uint8_t StopwatchStarted = 0U;
-static uint32_t Time = 0U;
-
 struct UDS_Neg udsneg;
 struct UDS_Pos udspos;
 struct UDS_PosDID udsposdid;
 struct UDS_PosRoutine udsposroutine;
+
+UDS_Stopwatch Stopwatches[UDS_MAX_STOPWATCH_COUNT];
 
 extern struct ETH_Header ethhdr;
 extern struct IP_Header iphdr;
@@ -24,13 +23,13 @@ extern struct IP_Header iphdr;
 void UDS_Respond(uint8_t *msg)
 {
 	uint8_t *response;
-	uint8_t requestedSID = msg[0];
+	uint8_t requestedSID = msg[REQUEST_SID_INDEX];
 	uint8_t reset = 0U;
 
 	switch(requestedSID)
 	{
 		case UDS_TESTER_PRESENT_RQ_SID:
-			if(UDS_END_OF_REQUEST == msg[1])
+			if(UDS_END_OF_REQUEST == msg[SUBSERVICE_INDEX])
 			{
 				response = UDS_PreparePosResponse(requestedSID);
 			}
@@ -42,7 +41,7 @@ void UDS_Respond(uint8_t *msg)
 			break;
 
 		case UDS_ECU_RESET_RQ_SID:
-			if(UDS_END_OF_REQUEST == msg[1])
+			if(UDS_END_OF_REQUEST == msg[SUBSERVICE_INDEX])
 			{
 				response = UDS_PreparePosResponse(requestedSID);
 				reset = 1U;
@@ -129,19 +128,19 @@ uint8_t *UDS_PreparePosResponse(uint8_t RequestSID)
 
 uint8_t *UDS_ReadDataByID(uint8_t *msg)
 {
-	uint16_t *dataid = (uint16_t *)(&msg[1]);
+	uint16_t *dataid = (uint16_t *)(&msg[DID_INDEX]);
 	*dataid = swap_uint16(*dataid);
 
 	if(UDS_TIME_FROM_STARTUP_DID == *dataid)
 	{
-		udsposdid.PositiveSID = msg[0];
+		udsposdid.PositiveSID = msg[REQUEST_SID_INDEX];
 		udsposdid.DID = swap_uint16(*dataid);
 		udsposdid.DataRecord = swap_uint16((uint16_t)(SysTick_GetTick()/1000));
 	}
 
 	else
 	{
-		return UDS_IncorrectMsgLenOrInvFormat(msg[0]);
+		return UDS_IncorrectMsgLenOrInvFormat(msg[REQUEST_SID_INDEX]);
 	}
 
 	iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_PosDID));
@@ -153,7 +152,7 @@ uint8_t *UDS_ReadDataByID(uint8_t *msg)
 uint8_t *UDS_RoutineControl(uint8_t *msg)
 {
 	uint8_t *response;
-	uint16_t *routineid = (uint16_t *)(&msg[2]);
+	uint16_t *routineid = (uint16_t *)(&msg[STOPWATCH_ROUTINE_INDEX]);
 
 	*routineid = swap_uint16(*routineid);
 
@@ -164,7 +163,7 @@ uint8_t *UDS_RoutineControl(uint8_t *msg)
 
 	else
 	{
-		return UDS_SubfunctionNotSupported(msg[0]);
+		return UDS_SubfunctionNotSupported(msg[REQUEST_SID_INDEX]);
 	}
 
 	return response;
@@ -173,59 +172,106 @@ uint8_t *UDS_RoutineControl(uint8_t *msg)
 
 uint8_t *UDS_StopwatchRoutine(uint8_t *msg)
 {
-	/* Set default length of a frame to exclude TimeValue */
-	iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_PosRoutine) - sizeof(uint32_t));
+	uint8_t id = 0xFFU;
 
-	switch(msg[1])
+	/* Set default length of a frame to exclude TimeValue */
+	iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_PosRoutine) - sizeof(udsposroutine.TimeValue));
+
+	switch(msg[SUBSERVICE_INDEX])
 	{
 		case UDS_STOPWATCH_START:
-			if(0U == StopwatchStarted)
+			for(int i = 0; i < UDS_MAX_STOPWATCH_COUNT; ++i)
 			{
-				Time = SysTick_GetTick();
-				StopwatchStarted = 1U;
+				if(STOPWATCH_READY == Stopwatches[i].State)
+				{
+					id = i;
+					break;
+				}
 			}
 
-			else
+			if(0xFFU == id)
 			{
-				return UDS_RequestSequenceError(msg[0]);
+				for(int i = 0; i < UDS_MAX_STOPWATCH_COUNT; ++i)
+				{
+					if(STOPWATCH_STOPPED == Stopwatches[i].State)
+					{
+						id = i;
+						break;
+					}
+
+					if((UDS_MAX_STOPWATCH_COUNT-1) == i)
+					{
+						return UDS_ServiceNotSupported(msg[REQUEST_SID_INDEX]);
+					}
+				}
 			}
+
+			Stopwatches[id].ID = id;
+			Stopwatches[id].State = STOPWATCH_RUNNING;
+			Stopwatches[id].TimeValue = SysTick_GetTick();
+			udsposroutine.StopwatchID = Stopwatches[id].ID;
 			break;
 
 		case UDS_STOPWATCH_STOP:
-			if(1U == StopwatchStarted)
+			if(msg[STOPWATCH_ID_INDEX] < UDS_MAX_STOPWATCH_COUNT)
 			{
-				Time = SysTick_GetTick() - Time;
-				StopwatchStarted = 0U;
+				if(STOPWATCH_RUNNING == Stopwatches[msg[STOPWATCH_ID_INDEX]].State)
+				{
+					Stopwatches[msg[STOPWATCH_ID_INDEX]].State = STOPWATCH_STOPPED;
+					Stopwatches[msg[STOPWATCH_ID_INDEX]].TimeValue = SysTick_GetTick() - Stopwatches[msg[STOPWATCH_ID_INDEX]].TimeValue;
+					udsposroutine.StopwatchID = Stopwatches[msg[STOPWATCH_ID_INDEX]].ID;
+				}
+
+				else
+				{
+					return UDS_IncorrectMsgLenOrInvFormat(msg[REQUEST_SID_INDEX]);
+				}
 			}
 
 			else
 			{
-				return UDS_RequestSequenceError(msg[0]);
+				return UDS_IncorrectMsgLenOrInvFormat(msg[REQUEST_SID_INDEX]);
 			}
 			break;
 
 		case UDS_STOPWATCH_READ:
-			if(1U == StopwatchStarted)
+			if(msg[STOPWATCH_ID_INDEX] < UDS_MAX_STOPWATCH_COUNT)
 			{
-				udsposroutine.TimeValue = swap_uint32(FormatTime(SysTick_GetTick() - Time));
+				if(STOPWATCH_RUNNING == Stopwatches[msg[STOPWATCH_ID_INDEX]].State)
+				{
+					udsposroutine.TimeValue = swap_uint32(FormatTime(SysTick_GetTick() - Stopwatches[msg[STOPWATCH_ID_INDEX]].TimeValue));
+				}
+
+				else if(STOPWATCH_STOPPED == Stopwatches[msg[STOPWATCH_ID_INDEX]].State)
+				{
+					Stopwatches[msg[STOPWATCH_ID_INDEX]].State = STOPWATCH_READY;
+					udsposroutine.TimeValue = swap_uint32(FormatTime(Stopwatches[msg[STOPWATCH_ID_INDEX]].TimeValue));
+				}
+
+				else
+				{
+					return UDS_IncorrectMsgLenOrInvFormat(msg[REQUEST_SID_INDEX]);
+				}
 			}
 
 			else
 			{
-				udsposroutine.TimeValue = swap_uint32(FormatTime(Time));
+				return UDS_IncorrectMsgLenOrInvFormat(msg[REQUEST_SID_INDEX]);
 			}
+
+			udsposroutine.StopwatchID = Stopwatches[msg[STOPWATCH_ID_INDEX]].ID;
+
 			/* Set length of the frame to include TimeValue */
 			iphdr.TotalLength = swap_uint16(sizeof(struct IP_Header) + sizeof(struct UDS_PosRoutine));
-
 			break;
 
 		default:
-			return UDS_IncorrectMsgLenOrInvFormat(msg[0]);
+			return UDS_IncorrectMsgLenOrInvFormat(msg[REQUEST_SID_INDEX]);
 			break;
 	}
 
 	udsposroutine.PositiveSID = (uint8_t)(UDS_ROUTINE_CONTROL_RQ_SID + UDS_RESPONSE_SID_OFFSET);
-	udsposroutine.Subservice = msg[1];
+	udsposroutine.Subservice = msg[SUBSERVICE_INDEX];
 	udsposroutine.Routine = swap_uint16(UDS_STOPWATCH_ROUTINE);
 
 	return (uint8_t *)&udsposroutine;

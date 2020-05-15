@@ -33,11 +33,20 @@ def fprintTimefromHex(secs):
 
 
 def printStopWatchTime(payload):
-    print("Time: {0}:{1}:{2}:{3}".format(payload[4], payload[5], payload[6], payload[7]*10))
+    print("Time: {0}:{1}:{2}:{3}".format(payload[StopWatchTimeOffset], payload[StopWatchTimeOffset+1],
+                                         payload[StopWatchTimeOffset+2], payload[StopWatchTimeOffset+3]*10))
 
 
 def int_from_bytes(input):
     return int.from_bytes(input[3:5], byteorder='big', signed=True)
+
+
+def RCStopwatchStop(ID):
+    return RoutineControlSID + StopWatchStop + StopWatchRoutine + StopWatchID[ID]
+
+
+def RCStopwatchSend(ID):
+    return RoutineControlSID + StopWatchSend + StopWatchRoutine + StopWatchID[ID]
 
 
 # Addresses of microcontroller and PC
@@ -51,14 +60,20 @@ eth = 'Realtek PCIe GBE Family Controller'
 TesterPresentSID = b'\x3E'
 ECUResetSID = b'\x11'
 
-ReadDataByIndentifierSID = b'\x22'
+ReadDataByIdentifierSID = b'\x22'
 TimeFromStartupDID = b'\x01\x05'
 
 RoutineControlSID = b'\x31'
 StopWatchRoutine = b'\x13\x01'
 StopWatchStart = b'\x01'
+RCStopwatchStart = RoutineControlSID + StopWatchStart + StopWatchRoutine
 StopWatchStop = b'\x02'
 StopWatchSend = b'\x03'
+StopWatchTimeOffset = 5
+StopWatchID = [b'\x00', b'\x01', b'\x02', b'\x03',
+               b'\x04', b'\x05', b'\x06', b'\x07',
+               b'\x08', b'\x09', b'\x0A', b'\x0B',
+               b'\x0C', b'\x0D', b'\x0E', b'\x0F', b'\x10']
 
 # Other SIDs
 DiagnosticSessionControlSID = b'\x10'
@@ -66,6 +81,7 @@ TesterPresentInvalidSID = b'\x3E\xFF\xFF'
 ECUResetInvalidSID = b'\x11\x3E'
 InvalidDID = b'\x01\x06'
 InvalidRoutineSubfunc = b'\x04'
+InvalidStopWatchID = b'\x11'
 
 # Response SIDs
 TesterPresentRPSID = b'\x7E\x3E'
@@ -78,9 +94,10 @@ StopWatchSendRP = b'\x71\x03\x13\x01'
 TesterPresentInvalidRPSID = b'\x7F\x3E\x13'
 ECUResetInvalidRPSID = b'\x7F\x11\x13'
 InvalidRPDID = b'\x7F\x22\x13'
-InvalidRoutineRPSID = b'\x7F\x31\x13'
+RoutineControlIncMsgLenOrInvFormatRPSID = b'\x7F\x31\x13'
 RoutineControlSeqErrorRPSID = b'\x7F\x31\x24'
-RoutineControlSubfuncNotSupported = b'\x7F\x31\x12'
+RoutineControlSubfuncNotSupportedRPSID = b'\x7F\x31\x12'
+RoutineControlServiceNotSupportedRPSID = b'\x7F\x31\x11'
 
 # Test different SIDs
 if __name__ == '__main__':
@@ -96,13 +113,18 @@ if __name__ == '__main__':
     sendUDSPacketandPrint(TesterPresentSID)
 
     # Print formatted time
-    fprintTimefromHex(int_from_bytes(sendUDSPacketandPrint(ReadDataByIndentifierSID + TimeFromStartupDID)))
+    fprintTimefromHex(int_from_bytes(sendUDSPacketandPrint(ReadDataByIdentifierSID + TimeFromStartupDID)))
     time.sleep(1)
-    fprintTimefromHex(int_from_bytes(sendUDSPacketandPrint(ReadDataByIndentifierSID + TimeFromStartupDID)))
-    sendUDSPacketandPrint(ReadDataByIndentifierSID + InvalidDID)
+    fprintTimefromHex(int_from_bytes(sendUDSPacketandPrint(ReadDataByIdentifierSID + TimeFromStartupDID)))
+    sendUDSPacketandPrint(ReadDataByIdentifierSID + InvalidDID)
 
-    sendUDSPacketandPrint(RoutineControlSID + StopWatchStart)
-    sendUDSPacketandPrint(RoutineControlSID + StopWatchStart + StopWatchRoutine)
-    sendUDSPacketandPrint(RoutineControlSID + StopWatchStart + StopWatchRoutine)
-    sendUDSPacketandPrint(RoutineControlSID + StopWatchStop + StopWatchRoutine)
-    printStopWatchTime(sendUDSPacketandPrint(RoutineControlSID + StopWatchSend + StopWatchRoutine))
+    for i in range(18):
+        sendUDSPacketandPrint(RCStopwatchStart)
+
+    sendUDSPacketandPrint(RCStopwatchStop(10))
+    sendUDSPacketandPrint(RCStopwatchStop(1))
+    sendUDSPacketandPrint(RCStopwatchSend(1))
+
+    sendUDSPacketandPrint(RCStopwatchStart)
+    sendUDSPacketandPrint(RCStopwatchStart)
+
