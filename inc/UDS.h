@@ -10,6 +10,15 @@
 
 #include "stdint.h"
 
+typedef enum {
+	STOPWATCH_READY = 0x00U,
+
+	STOPWATCH_RUNNING = 0x01U,
+
+	STOPWATCH_STOPPED = 0x02U
+
+} UDS_Stopwatch_state;
+
 struct UDS_Neg {
 	uint8_t NegativeSID;
 
@@ -42,17 +51,33 @@ struct UDS_PosRoutine {
 
 	uint16_t Routine;
 
+	uint8_t StopwatchID;
+
 	uint32_t TimeValue;
 
 } __attribute__ ((packed));
 
+typedef struct {
+	uint8_t ID;
+
+	UDS_Stopwatch_state State;
+
+	uint32_t TimeValue;
+
+} UDS_Stopwatch;
+
+/* UDS message indexes */
+#define REQUEST_SID_INDEX          			0U
+#define SUBSERVICE_INDEX					1U
+#define DID_INDEX 							1U
+#define STOPWATCH_ROUTINE_INDEX				2U
+#define STOPWATCH_ID_INDEX 		   			4U
+
 /* Services */
 #define UDS_ECU_RESET_RQ_SID 				((uint8_t)0x11U)
-#define UDS_ECU_RESET_RP_SID 				((uint8_t)0x51U)
 #define UDS_READ_DATA_BY_ID_RQ_SID 			((uint8_t)0x22U)
 #define UDS_ROUTINE_CONTROL_RQ_SID 			((uint8_t)0x31U)
 #define UDS_TESTER_PRESENT_RQ_SID 			((uint8_t)0x3EU)
-#define UDS_TESTER_PRESENT_RP_SID 			((uint8_t)0x7EU)
 
 #define UDS_RESPONSE_SID_OFFSET 			((uint8_t)0x40U)
 
@@ -60,6 +85,7 @@ struct UDS_PosRoutine {
 #define UDS_TIME_FROM_STARTUP_DID 			((uint16_t)0x0105U)
 
 /* Routine control */
+#define UDS_MAX_STOPWATCH_COUNT				17U
 #define UDS_STOPWATCH_ROUTINE 				((uint16_t)0x1301U)
 #define UDS_STOPWATCH_START 				((uint8_t)0x01U)
 #define UDS_STOPWATCH_STOP 					((uint8_t)0x02U)

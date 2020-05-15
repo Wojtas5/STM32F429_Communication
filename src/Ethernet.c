@@ -583,8 +583,7 @@ void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength, uin
 	/* Check if the descriptor is owned by DMA or CPU, if by CPU then continue */
 	if((DMATxDesc->ControlAndStatus & TX_DESC_OWN) != 0)
 	{
-		/* TODO add delay on Systick or return some status */
-		Delay_ms(1);
+		SysTick_Delay(1);
 	}
 
 	/* Set the exact size of frame to be transferred */
