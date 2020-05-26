@@ -21,15 +21,22 @@ void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uin
 	iphdr->FragmentOffset = DEFAULT_FRAG_OFFSET;
 	iphdr->TTL = DEFAULT_TTL;
 	iphdr->Protocol = TCP_PROTOCOL;
-	iphdr->Checksum = 0U;
 	iphdr->SrcIP = swap_uint32(IPV4_ADDR(srcip));
 	iphdr->DestIP = swap_uint32(IPV4_ADDR(destip));
+	iphdr->Checksum = IP_CalculateChecksum(iphdr);
+}
+
+void IP_PrepareHeader(struct IP_Header *iphdr, uint16_t len)
+{
+	iphdr->TotalLength = swap_uint16(sizeof(struct IP_Header) + len);
 	iphdr->Checksum = IP_CalculateChecksum(iphdr);
 }
 
 /* Calculate checksum for IP header */
 uint16_t IP_CalculateChecksum(struct IP_Header *iphdr)
 {
+	iphdr->Checksum = 0U;
+
 	uint32_t sum = 0U;
 	uint16_t *ip = (uint16_t *)iphdr;
 	uint8_t count = sizeof(struct IP_Header)/2;
@@ -42,7 +49,7 @@ uint16_t IP_CalculateChecksum(struct IP_Header *iphdr)
 
 	sum = (sum & 0xFFFF) + (sum >> 16);
 
-	return (uint16_t)~sum;
+	return (uint16_t)(~sum);
 }
 
 /* Copy IP and Ethernet headers as well as data to transmit buffer */
@@ -66,15 +73,15 @@ void IP_PrepareStaticMessage(uint8_t *srcip, uint8_t *destip,
 
 	if(DMATxDesc->Buf1Addr == buffer || 1U == buffer)
 	{
-		memcpy((uint8_t *)DMATxDesc->Buf1Addr, (uint8_t *)ethhdr, SIZE_OF_ETH_HEADER);
-		memcpy((uint8_t *)(DMATxDesc->Buf1Addr + SIZE_OF_ETH_HEADER), (uint8_t *)iphdr, SIZE_OF_IP_HEADER);
-		memcpy((uint8_t *)DMATxDesc->Buf1Addr + SIZE_OF_HEADERS, data, datasize);
+		memcpy((uint8_t *)DMATxDesc->Buf1Addr, (uint8_t *)ethhdr, SIZE_OF_ETH_HDR);
+		memcpy((uint8_t *)(DMATxDesc->Buf1Addr + SIZE_OF_ETH_HDR), (uint8_t *)iphdr, SIZE_OF_IP_HDR);
+		memcpy((uint8_t *)DMATxDesc->Buf1Addr + SIZE_OF_ETH_IP_HDR, data, datasize);
 	}
 
 	else /* DMATxDesc->Buf2NextDescAddr == buffer || 2U == buffer */
 	{
-		memcpy((uint8_t *)DMATxDesc->Buf2NextDescAddr, (uint8_t *)ethhdr, SIZE_OF_ETH_HEADER);
-		memcpy((uint8_t *)(DMATxDesc->Buf2NextDescAddr + SIZE_OF_ETH_HEADER), (uint8_t *)iphdr, SIZE_OF_IP_HEADER);
-		memcpy((uint8_t *)DMATxDesc->Buf2NextDescAddr + SIZE_OF_HEADERS, data, datasize);
+		memcpy((uint8_t *)DMATxDesc->Buf2NextDescAddr, (uint8_t *)ethhdr, SIZE_OF_ETH_HDR);
+		memcpy((uint8_t *)(DMATxDesc->Buf2NextDescAddr + SIZE_OF_ETH_HDR), (uint8_t *)iphdr, SIZE_OF_IP_HDR);
+		memcpy((uint8_t *)DMATxDesc->Buf2NextDescAddr + SIZE_OF_ETH_IP_HDR, data, datasize);
 	}
 }

@@ -25,6 +25,34 @@ uint32_t swap_uint32(uint32_t val)
 }
 
 
+uint16_t inc_swapped_uint16(uint16_t val)
+{
+	if((uint8_t)(val >> 8) != 0xFF)
+	{
+		return val + 0x0100U;
+	}
+
+	else
+	{
+		return (uint16_t)(val + 0x0101U);
+	}
+}
+
+
+uint32_t inc_swapped_uint32(uint32_t val)
+{
+	if((uint8_t)(val >> 24) != 0xFF)
+	{
+		return val + 0x01000000U;
+	}
+
+	else
+	{
+		return (uint32_t)(val + 0x01010000U);
+	}
+}
+
+
 void Delay_ms(uint16_t time)
 {
 	for (int i = 0; i < 4000*time; ++i);
