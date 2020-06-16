@@ -20,8 +20,16 @@ uint16_t swap_uint16(uint16_t val)
 
 uint32_t swap_uint32(uint32_t val)
 {
-    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF );
+    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF);
     return (val << 16) | (val >> 16);
+}
+
+
+uint64_t swap_uint64(uint64_t val)
+{
+    val = ((val << 8) & 0xFF00FF00FF00FF00ULL) | ((val >> 8) & 0x00FF00FF00FF00FFULL);
+    val = ((val << 16) & 0xFFFF0000FFFF0000ULL) | ((val >> 16) & 0x0000FFFF0000FFFFULL);
+    return (val << 32) | (val >> 32);
 }
 
 
@@ -55,11 +63,11 @@ uint32_t inc_swapped_uint32(uint32_t val)
 
 void Delay_ms(uint16_t time)
 {
-	for (int i = 0; i < 4000*time; ++i);
+	for(int i = 0; i < 4000*time; ++i);
 }
 
 
-void Systick_Init(uint32_t ticks)
+void SysTick_Init(uint32_t ticks)
 {
 	SysTick->LOAD = (uint32_t)(ticks - 1U);
 	SysTick->VAL  = 0U;
@@ -90,7 +98,13 @@ void SysTick_Delay(uint32_t time)
 	tickstart = SysTick_GetTick();
 	while((SysTick_GetTick() - tickstart) < time)
 	{
+		SysTick_DelayCallback();
 	}
+}
+
+
+__attribute__ ((weak)) void SysTick_DelayCallback(void)
+{
 }
 
 

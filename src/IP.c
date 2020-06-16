@@ -9,6 +9,8 @@
 #include "misc.h"
 #include "string.h"
 
+extern struct ETH_Header ethhdr;
+
 /* Initialize IP_Header structure with default values and calculate total length and Checksum */
 void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uint16_t len)
 {
@@ -26,8 +28,10 @@ void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uin
 	iphdr->Checksum = IP_CalculateChecksum(iphdr);
 }
 
-void IP_PrepareHeader(struct IP_Header *iphdr, uint16_t len)
+void IP_PrepareHeader(struct Interface *interface, uint16_t len)
 {
+	struct IP_Header *iphdr = interface->msg;
+
 	iphdr->TotalLength = swap_uint16(sizeof(struct IP_Header) + len);
 	iphdr->Checksum = IP_CalculateChecksum(iphdr);
 }
@@ -53,9 +57,11 @@ uint16_t IP_CalculateChecksum(struct IP_Header *iphdr)
 }
 
 /* Copy IP and Ethernet headers as well as data to transmit buffer */
-void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data)
+void IP_Send(struct Interface *interface, uint8_t *data)
 {
-	memcpy((uint8_t *)DMATxDesc->Buf1Addr, (uint8_t *)ethhdr, sizeof(struct ETH_Header));
+	struct IP_Header *iphdr = interface->msg;
+
+	memcpy((uint8_t *)DMATxDesc->Buf1Addr, (uint8_t *)&ethhdr, sizeof(struct ETH_Header));
 	memcpy((uint8_t *)(DMATxDesc->Buf1Addr + sizeof(struct ETH_Header)), (uint8_t *)iphdr, sizeof(struct IP_Header));
 	memcpy((uint8_t *)(DMATxDesc->Buf1Addr + sizeof(struct ETH_Header) + sizeof(struct IP_Header)),
 		   data, swap_uint16(iphdr->TotalLength) - sizeof(struct IP_Header));
