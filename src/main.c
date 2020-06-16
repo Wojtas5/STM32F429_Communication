@@ -14,10 +14,10 @@
 #include "IP.h"
 #include "misc.h"
 #include "UDS.h"
+#include "tcp.h"
 #include "string.h"
 
 /* Macros */
-#define MAX_FRAME_SIZE  83U
 #define FILTERING_ENABLED
 
 /* Global variables */
@@ -57,7 +57,6 @@ int main(void)
 
 	/* Initialize transmit descriptor */
 	ETH_DMATxDescInit(DMATxDesc);
-	DMATxDesc->ControlAndStatus |= TX_DESC_DISABLE_PAD;
 
 	/* Initialize receive descriptors in a list structure */
 	ETH_DMARxDescListInit(DMARxDesc, RX_DESCRIPTORS);
@@ -78,11 +77,8 @@ int main(void)
 		{
 			ETH_ReceiveFrame(&RxFrame);
 
-			/* Added small delay for better stability on script side */
-			SysTick_Delay(2);
-
 			/* Decode the message and respond to it */
-			UDS_Respond((uint8_t *)RxFrame.Buffer + SIZE_OF_HEADERS);
+			TCP_Respond((uint8_t *)RxFrame.Buffer + SIZE_OF_ETH_IP_HDR, RxFrame.Framelength);
 
 			/* Give back control of Rx descriptor to the DMA */
 			RxFrame.Desc->Status |= RX_DESC_OWN;
@@ -114,3 +110,4 @@ void ETH_RxCallback(void)
 {
 	RxFrames++;
 }
+

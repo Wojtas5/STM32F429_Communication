@@ -10,12 +10,10 @@
 
 #include "stdint.h"
 
-#define DISABLED 			((uint32_t)0U)
-#define RESET	 			((uint32_t)0U)
-#define SIZE_OF_CRC 		4U
-#define SIZE_OF_ETH_HEADER  14U
-#define SIZE_OF_IP_HEADER   20U
-#define SIZE_OF_HEADERS 	34U
+#define DISABLED 		 ((uint32_t)0U)
+#define RESET	 		 ((uint32_t)0U)
+#define SIZE_OF_CRC 	 4U
+#define SIZE_OF_ETH_HDR  14U
 
 
 typedef enum {
