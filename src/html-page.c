@@ -4,6 +4,7 @@
  *  Created on: 20 May 2020
  *      Author: wsadzik
  */
+#if USE_HTML
 
 #include "html-page.h"
 #include "misc.h"
@@ -34,7 +35,7 @@ const unsigned char HTTP_OK[] = {
 uint16_t TEST_PAGE_SUM(void)
 {
 	uint32_t sum = 0U;
-	uint16_t *p = TEST_PAGE;
+	uint16_t *p = (uint16_t *)TEST_PAGE;
 	uint8_t count = TEST_PAGE_LEN/2;
 
 	while(count > 0)
@@ -47,3 +48,5 @@ uint16_t TEST_PAGE_SUM(void)
 
 	return (uint16_t)swap_uint16(sum);
 }
+
+#endif

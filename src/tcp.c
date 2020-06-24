@@ -4,7 +4,7 @@
  *  Created on: 14 May 2020
  *      Author: wsadzik
  */
-
+#if 0 /* TODO don't build if not configured for use */
 #include "tcp.h"
 #include "bsp.h"
 #include "IP.h"
@@ -14,7 +14,6 @@
 
 struct TCP_Header tcphdr;
 extern struct IP_Header iphdr;
-extern struct ETH_Header ethhdr;
 
 TCP_tcb tcptcb[TCP_MAX_CONNECTIONS];
 static uint8_t buf[1480];
@@ -120,7 +119,7 @@ void TCP_AbortConnection(TCP_tcb *tcb, struct TCP_Header *rtcphdr)
 	tcphdr.UrgentPointer = 0U;
 	tcphdr.Checksum = TCP_CalculateChecksum(NO_DATA, NO_DATA, NO_OPT);
 
-	IP_Send(&iphdr, &ethhdr, (uint8_t *)&tcphdr);
+	IP_Send((uint8_t *)&tcphdr);
 
 	/* Mark tcb ready to be freed */
 	tcb->state = CLOSED;
@@ -132,7 +131,7 @@ void TCP_SendACK(TCP_tcb *tcb)
 	IP_PrepareHeader(&iphdr, SIZEOF_TCP_HEADER);
 	TCP_PrepareHeader(tcb, NO_DATA, ACK, NO_DATA);
 
-	IP_Send(&iphdr, &ethhdr, (uint8_t *)&tcphdr);
+	IP_Send((uint8_t *)&tcphdr);
 }
 
 /* Load a html page via http */
@@ -143,7 +142,7 @@ void TCP_LoadPage(TCP_tcb *tcb, uint16_t recvframelength)
 
 	memcpy(buf, (uint8_t *)&tcphdr, SIZEOF_TCP_HEADER);
 	memcpy(buf + SIZEOF_TCP_HEADER, TEST_PAGE, TEST_PAGE_LEN);
-	IP_Send(&iphdr, &ethhdr, buf);
+	IP_Send(buf);
 }
 
 /* Respond with SYN and ACK, create a tcb */
@@ -154,7 +153,7 @@ void TCP_CreateConnection(TCP_tcb *tcb, struct TCP_Header *rtcphdr)
 		IP_PrepareHeader(&iphdr, SIZEOF_TCP_HEADER + sizeof(tcphdr.MSS));
 		TCP_HeaderInit(rtcphdr);
 
-		IP_Send(&iphdr, &ethhdr, (uint8_t *)&tcphdr);
+		IP_Send((uint8_t *)&tcphdr);
 	}
 
 	else
@@ -310,3 +309,5 @@ void TCP_Freetcb(TCP_tcb *tcb)
 	tcb->state = LISTEN;
 	tcb->destport = NO_PORT;
 }
+
+#endif

@@ -50,8 +50,13 @@
 #define PIN4_NOPULL  ((uint32_t)(0b00 << 8))
 #define PIN5_NOPULL  ((uint32_t)(0b00 << 10))
 #define PIN7_NOPULL  ((uint32_t)(0b00 << 14))
+#define PIN8_NOPULL  ((uint32_t)(0b00 << 16))
+#define PIN9_NOPULL  ((uint32_t)(0b00 << 18))
 #define PIN11_NOPULL ((uint32_t)(0b00 << 22))
 #define PIN13_NOPULL ((uint32_t)(0b00 << 26))
+
+#define PIN8_PULLUP  ((uint32_t)(0b01 << 16))
+#define PIN9_PULLUP  ((uint32_t)(0b01 << 18))
 
 /* OSPEEDR */
 #define PIN1_HS      ((uint32_t)(0b10 << 2))
@@ -59,6 +64,8 @@
 #define PIN4_HS 	 ((uint32_t)(0b10 << 8))
 #define PIN5_HS	 	 ((uint32_t)(0b10 << 10))
 #define PIN7_HS	 	 ((uint32_t)(0b10 << 14))
+#define PIN8_HS	 	 ((uint32_t)(0b10 << 16))
+#define PIN9_HS	 	 ((uint32_t)(0b10 << 18))
 #define PIN11_HS 	 ((uint32_t)(0b10 << 22))
 #define PIN13_HS 	 ((uint32_t)(0b10 << 26))
 
@@ -70,6 +77,9 @@
 #define PIN7_ETH     ((uint32_t)(0b1011 << 28))
 #define PIN11_ETH    ((uint32_t)(0b1011 << 12))
 #define PIN13_ETH    ((uint32_t)(0b1011 << 20))
+
+#define PIN8_CAN     ((uint32_t)(0b1001 << 0))
+#define PIN9_CAN     ((uint32_t)(0b1001 << 4))
 
 /* ============================== */
 /*  RCC registers related macros  */

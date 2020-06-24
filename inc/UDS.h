@@ -9,6 +9,7 @@
 #define UDS_H_
 
 #include "stdint.h"
+#include "interface.h"
 
 typedef enum {
 	STOPWATCH_READY = 0x00U,
@@ -74,12 +75,15 @@ typedef struct {
 #define STOPWATCH_ID_INDEX 		   			4U
 
 /* Services */
+#define UDS_RESPONSE_SID_OFFSET 			((uint8_t)0x40U)
 #define UDS_ECU_RESET_RQ_SID 				((uint8_t)0x11U)
 #define UDS_READ_DATA_BY_ID_RQ_SID 			((uint8_t)0x22U)
 #define UDS_ROUTINE_CONTROL_RQ_SID 			((uint8_t)0x31U)
 #define UDS_TESTER_PRESENT_RQ_SID 			((uint8_t)0x3EU)
-
-#define UDS_RESPONSE_SID_OFFSET 			((uint8_t)0x40U)
+#define UDS_TIME_FROM_STARTUP_RQ_SID 		((uint32_t)0x22010500U)
+#define UDS_STOPWATCH_START_RQ_SID 			((uint32_t)0x31011301U)
+#define UDS_STOPWATCH_STOP_RQ_SID(id) 		((uint64_t)(0x3102130100000000U | (id << 24)))
+#define UDS_STOPWATCH_READ_RQ_SID(id) 		((uint64_t)(0x3103130100000000U | (id << 24)))
 
 /* Data Identifiers */
 #define UDS_TIME_FROM_STARTUP_DID 			((uint16_t)0x0105U)
@@ -103,13 +107,19 @@ typedef struct {
 /*  Function prototypes  */
 /* ===================== */
 
-void UDS_Respond(uint8_t *msg);
-uint8_t *UDS_IncorrectMsgLenOrInvFormat(uint8_t RequestSID);
-uint8_t *UDS_ServiceNotSupported(uint8_t RequestSID);
-uint8_t *UDS_PrepareNegResponse(uint8_t RequestSID, uint8_t ErrorSID);
-uint8_t *UDS_PreparePosResponse(uint8_t RequestSID);
-uint8_t *UDS_ReadDataByID(uint8_t *msg);
-uint8_t *UDS_RoutineControl(uint8_t *msg);
-uint8_t *UDS_StopwatchRoutine(uint8_t *msg);
+void UDS_Respond(struct Interface *interface, uint8_t *msg);
+uint8_t *UDS_IncorrectMsgLenOrInvFormat(struct Interface *interface, uint8_t RequestSID);
+uint8_t *UDS_ServiceNotSupported(struct Interface *interface, uint8_t RequestSID);
+uint8_t *UDS_PrepareNegResponse(struct Interface *interface, uint8_t RequestSID, uint8_t ErrorSID);
+uint8_t *UDS_PreparePosResponse(struct Interface *interface, uint8_t RequestSID);
+uint8_t *UDS_ReadDataByID(struct Interface *interface, uint8_t *msg);
+uint8_t *UDS_RoutineControl(struct Interface *interface, uint8_t *msg);
+uint8_t *UDS_StopwatchRoutine(struct Interface *interface, uint8_t *msg);
+void UDS_TesterPresent(struct Interface *interface);
+void UDS_Reset(struct Interface *interface);
+void UDS_TimeFromStartupDID(struct Interface *interface);
+void UDS_StartStopwatch(struct Interface *interface);
+void UDS_StopStopwatch(struct Interface *interface, uint8_t stopwatchid);
+void UDS_ReadStopwatch(struct Interface *interface, uint8_t stopwatchid);
 
 #endif /* UDS_H_ */
