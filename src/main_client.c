@@ -14,15 +14,14 @@
 
 /* Global structures */
 CAN_Mailbox cantx, canrx[20];
+CAN_Mailbox *currcanrx = canrx;
 struct Interface CAN_interface = {CAN, &CAN1_PrepareMsg, &CAN1_SetDLC, (CAN_Mailbox *)&cantx};
 
 /* Function prototypes */
-void CAN1_DisableFiltering(void);
+static void CAN1_DisableFiltering(void);
 
 int main(void)
 {
-	uint8_t i = 0U;
-
 	/* Initialize onboard LEDs and a button */
 	BSP_Init();
 
@@ -40,28 +39,34 @@ int main(void)
 	/* Set default ID of CAN frame */
 	cantx.ID = CAN1_DEFAULT_FRAME_ID;
 
+	/* Begin sending messages */
+	UDS_TesterPresent(&CAN_interface);
+	UDS_TimeFromStartupDID(&CAN_interface);
+	UDS_StartStopwatch(&CAN_interface);
+	CAN1_Receive(currcanrx, CAN_FIFO_0); // Receive one message, because FIFO can only hold 3
+	currcanrx += 1;
+	UDS_StartStopwatch(&CAN_interface);
+	SysTick_Delay(10);
+
+	UDS_ReadStopwatch(&CAN_interface, 0);
+	UDS_ReadStopwatch(&CAN_interface, 1);
+	UDS_StopStopwatch(&CAN_interface, 0);
+	SysTick_Delay(10);
+
+	UDS_ReadStopwatch(&CAN_interface, 0);
+	UDS_ReadStopwatch(&CAN_interface, 1);
+	SysTick_Delay(10);
+
+	UDS_ReadStopwatch(&CAN_interface, 0);
+	UDS_ReadStopwatch(&CAN_interface, 1);
+	SysTick_Delay(10);
+
 	while(1)
 	{
-		UDS_TesterPresent(&CAN_interface);
-
-		while(CAN_RECEIVED != CAN1_Receive(&canrx[i], CAN_FIFO_0));
-		++i;
-
-		UDS_TimeFromStartupDID(&CAN_interface);
-
-		while(CAN_RECEIVED != CAN1_Receive(&canrx[i], CAN_FIFO_0));
-		++i;
-
-		if(i > 10)
-		{
-			i = 0U;
-		}
-
-		SysTick_Delay(10);
 	}
 }
 
-void CAN1_DisableFiltering(void)
+static void CAN1_DisableFiltering(void)
 {
 	CAN_Filter canfilter;
 	canfilter.FilterNum = 0U;
@@ -72,4 +77,13 @@ void CAN1_DisableFiltering(void)
 
 	CAN1_FilterConfig(&canfilter);
 }
+
+void SysTick_DelayCallback(void)
+{
+	if(CAN_RECEIVED == CAN1_Receive(currcanrx, CAN_FIFO_0))
+	{
+		currcanrx += 1;
+	}
+}
+
 #endif
