@@ -23,9 +23,14 @@
 
 uint16_t swap_uint16(uint16_t val);
 uint32_t swap_uint32(uint32_t val);
+uint64_t swap_uint64(uint64_t val);
+uint16_t inc_swapped_uint16(uint16_t val);
+uint32_t inc_swapped_uint32(uint32_t val);
 void Delay_ms(uint16_t time);
-void Systick_Init(uint32_t ticks);
+void SysTick_Init(uint32_t ticks);
 uint32_t SysTick_GetTick(void);
 void SysTick_Delay(uint32_t time);
+void SysTick_DelayCallback(void);
+uint32_t FormatTime(uint32_t Time);
 
 #endif /* MISC_H_ */

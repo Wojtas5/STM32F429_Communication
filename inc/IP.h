@@ -10,6 +10,10 @@
 
 #include "stdint.h"
 #include "Ethernet.h"
+#include "interface.h"
+
+#define SIZE_OF_IP_HDR 20U
+#define SIZE_OF_ETH_IP_HDR 34U
 
 struct IP_Header {
 	uint8_t HeaderLength : 4;
@@ -22,9 +26,9 @@ struct IP_Header {
 
 	uint16_t ID;
 
-	uint16_t flags : 3;
-
 	uint16_t FragmentOffset : 13;
+
+	uint16_t flags : 3;
 
 	uint8_t TTL;
 
@@ -38,6 +42,7 @@ struct IP_Header {
 
 } __attribute__ ((packed));
 
+/* IP_Header structure related macros */
 #define IPV4_VERSION 		  0x4U
 #define DEFAULT_HEADER_LENGTH 0x5U
 #define DEFAULT_TOS 		  0x00U
@@ -61,7 +66,12 @@ struct IP_Header {
 /* ===================== */
 
 void IP_StructInit(struct IP_Header *iphdr, uint8_t *srcip, uint8_t *destip, uint16_t len);
+void IP_PrepareHeader(struct Interface *interface, uint16_t len);
 uint16_t IP_CalculateChecksum(struct IP_Header *iphdr);
-void IP_Send(struct IP_Header *iphdr, struct ETH_Header *ethhdr, uint8_t *data);
+void IP_Send(struct Interface *interface, uint8_t *data);
+void IP_PrepareStaticMessage(uint8_t *srcip, uint8_t *destip,
+							 ETH_TxDescriptor *DMATxDesc, uint32_t buffer,
+		 	 	 	 	 	 struct ETH_Header *ethhdr, struct IP_Header *iphdr,
+							 const uint8_t *data, uint16_t datasize);
 
 #endif /* IP_H_ */

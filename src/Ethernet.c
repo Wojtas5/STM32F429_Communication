@@ -9,9 +9,9 @@
 #include "Ethernet.h"
 #include "bsp.h"
 #include "misc.h"
+#include "string.h"
 
 /* Macros */
-#define DISABLED ((uint32_t)0U)
 
 /* Global variables */
 uint8_t PHYAddress = 0x00;
@@ -24,6 +24,7 @@ uint8_t Txbuff[TX_DESCRIPTORS*2][TX_BUF_SIZE] __attribute__ ((aligned (4)));
 uint8_t Rxbuff[RX_DESCRIPTORS*2][RX_BUF_SIZE] __attribute__ ((aligned (4)));
 #endif
 
+ETH_RxDescriptor *DMARxDescNext = DMARxDesc;
 
 void Ethernet_Init(void)
 {
@@ -121,7 +122,7 @@ void Ethernet_LowLevelInit(void)
 	GPIOG->AFR[1]  |= (PIN11_ETH | PIN13_ETH);
 
 	/* Enable Ethernet Interrupts and set priority */
-	NVIC_SetPriority(ETH_IRQn, 0);
+	NVIC_SetPriority(ETH_IRQn, 2U);
 	NVIC_EnableIRQ(ETH_IRQn);
 
 	/* Enable clock for Ethernet peripheral */
@@ -185,6 +186,7 @@ void ETH_MACStructInit(ETH_MACInit *macinit, ETH_PHYInit *phyinit)
 			macinit->DuplexMode = HALFDUPLEX_MODE;
 		}
 	}
+
 	else
 	{
 		macinit->Speed = ETHERNET_SPEED_100M;
@@ -576,17 +578,26 @@ void ETH_DMATxDescInit(ETH_TxDescriptor *DMATxDesc)
 }
 
 
-void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength)
+void ETH_DMAPrepareTxDesc(ETH_TxDescriptor *DMATxDesc, uint16_t Framelength, uint32_t buffer)
 {
 	/* Check if the descriptor is owned by DMA or CPU, if by CPU then continue */
 	if((DMATxDesc->ControlAndStatus & TX_DESC_OWN) != 0)
 	{
-		/* TODO add delay on Systick or return some status */
-		Delay_ms(1);
+		SysTick_Delay(1);
 	}
 
 	/* Set the exact size of frame to be transferred */
-	DMATxDesc->BufSize = (Framelength & TX_DESC_BUF1SIZE_MAX);
+	DMATxDesc->BufSize = 0U;
+
+	if(DMATxDesc->Buf1Addr == buffer || 1U == buffer)
+	{
+		DMATxDesc->BufSize = (Framelength & TX_DESC_BUF1SIZE_MAX);
+	}
+
+	else
+	{
+		DMATxDesc->BufSize = ((Framelength << TX_DESC_BUFFER2_OFFSET) & TX_DESC_BUF2SIZE_MAX);
+	}
 
 	/* Frame is ready to be sent, give control do DMA */
 	DMATxDesc->ControlAndStatus |= TX_DESC_OWN;
@@ -628,6 +639,52 @@ void ETH_DMARxDescInit(ETH_RxDescriptor *DMARxDesc)
 }
 
 
+void ETH_DMARxDescListInit(ETH_RxDescriptor *DMARxDesc, uint8_t buffcount)
+{
+	/* Check if there is enough free descriptors */
+	if(buffcount > RX_DESCRIPTORS)
+	{
+		/* Error */
+		BSP_LedRedOn();
+	}
+
+	ETH_RxDescriptor *dmarxdesc;
+
+	for(int i = 0; i < buffcount; i++)
+	{
+		dmarxdesc = DMARxDesc + i;
+
+		dmarxdesc->Status |= RX_DESC_OWN;
+		dmarxdesc->BufSizeAndControl = (RX_DESC_INT_ON_COMPLETION_ENABLED | RX_DESC_SECOND_ADDR_CHAINED | RX_DESC_BUF1SIZE(RX_BUF_SIZE));
+		dmarxdesc->Buf1Addr = (uint32_t)&Rxbuff[i];
+		dmarxdesc->Buf2NextDescAddr = (uint32_t)(DMARxDesc + (i+1)%buffcount);
+	}
+
+	ETH->DMARDLAR = (uint32_t)DMARxDesc;
+}
+
+
+void ETH_ReceiveFrame(ETH_RxFrame *rxframe)
+{
+	if((DMARxDescNext->Status & RX_DESC_OWN) == RESET)
+	{
+		/* Save framelength and buffer address of a current descriptor to a structure */
+		rxframe->Desc = DMARxDescNext;
+		rxframe->Framelength = ((DMARxDescNext->Status & RX_FRAMELENGTH_MAX) >> RX_FRAMELENGTH_OFFSET) - SIZE_OF_CRC;
+		rxframe->Buffer = DMARxDescNext->Buf1Addr;
+
+		/* Set next descriptor address to DMARxDescNext */
+		DMARxDescNext = (ETH_RxDescriptor *)(DMARxDescNext->Buf2NextDescAddr);
+	}
+
+	else
+	{
+		/* Error */
+		BSP_LedRedOn();
+	}
+}
+
+
 __attribute__ ((weak)) void ETH_RxCallback(void)
 {
 }
@@ -638,11 +695,12 @@ void ETH_IRQHandler(void)
 	if ((ETH->DMASR & RECEIVE_FINISHED) == RECEIVE_FINISHED)
 	{
 		ETH_RxCallback();
+
 		/* Clear receive pending interrupt bit */
-		ETH->DMASR |= RECEIVE_FINISHED;
+		ETH->DMASR = RECEIVE_FINISHED;
 	}
 	/* Clear normal interrupt summary bit */
-	ETH->DMASR |= NORMAL_INTERRUPT_SUMMARY;
+	ETH->DMASR = NORMAL_INTERRUPT_SUMMARY;
 }
 
 
