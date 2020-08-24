@@ -1,5 +1,6 @@
 # STM32F429_Communication
 This project is made for training purposes, everything was written from scratch besides CMSIS.   
+Project runs on NUCLEO-F429ZI board.  
 It's simplicity can be used to perceive a concept of a few protocols (UDS or TCP for example) and use it in own project.
 
 It supports protocols:
